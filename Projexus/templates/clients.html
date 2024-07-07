@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Client Select
+{% endblock %}
+
+{% block main %}
+    <div class="pageheader">
+        <h5 class="text-center span">Select a client to work with by double-clicking</h5>
+    </div>
+    <div>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col" hidden></th>
+                    <th scope="col">Client</th>
+                    <th scope="col">Address</th>
+                    <th scope="col">Phone Number</th>
+                    <th scope="col">Unit</th>
+                    <th scope="col">Material Markup</th>
+                    <th scope="col">Additional Markup</th>
+                    <th scope="col">Outstanding Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                    <tr>
+
+                        <td hidden>{{ client.id }}</td>
+                        <th scope="row">{{ client.name }}</th>
+                        <td>{{ client.billing_address }}</td>
+                        <td>{{ client.phone_number }}</td>
+                        <td>
+                            {% for unit in units %}
+                                {% if client.unit_id==unit.id %}
+                                    per {{unit.name}}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ client.material_markup }}%</td>
+                        <td>{{ client.additional_markup }}%</td>
+                        <td>${{ "%.2f"|format(client.balance) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center">
+        <a href="/newclient" class="btn btn-primary">+ New Client</a>
+    </div>
+    <form id="form" action="/clients" method="post">
+        <input type="hidden" id="hiddenInput" name="client_id" value="">
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            $('table tbody tr').on('dblclick', function() {
+                var chosen = $(this).find('td:first-child').text();
+                $('#hiddenInput').val(chosen);
+                $('#form').submit();
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,554 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Order
+{% endblock %}
+
+{% block main %}
+    <div class="pageheader">
+        <div class="metadata">
+            <h5>Client:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ client.name }}</h5>
+            <h5>Address: {{ client.billing_address }}</h2>
+            <h5>Phone:&nbsp;&nbsp;&nbsp;&nbsp;{{ client.phone_number }}</h5>
+        </div>
+        <div class="headerbuttons px-1">
+            <button id="expand" class="btn btn-primary">Expand/Hide Cart</button>
+        </div>
+    </div>
+    <div class="pagebody d-block justify-content-center">
+        <div id="cart">
+            <h5 class="text-center span">Cart</h5>
+            <form action="/order" method="post">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Material</th>
+                            <th scope="col">Sheet Cost</th>
+                            <th scope="col">Unit type</th>
+                            <th scope="col">Units</th>
+                            <th scope="col">Dimension</th>
+                            <th scope="col">Hem</th>
+                            <th scope="col">Sheets Required</th>
+                            <th scope="col">Unit Price</th>
+                            <th scope="col">Sub Total</th>
+                            <th scope="col">Excess Material Charge?</th>
+                            <th scope="col">Total Price</th>
+                            <th scope="col">Profit</th>
+                            <th scope="col">Edit | Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart %}
+                            <tr>
+                                <td>
+                                    {% for material in materials %}
+                                        {% if item.material_id==material.id %}
+                                            {{ material.name }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>${{ "%.2f"|format(item.material_cost) }}</td>
+                                <td>
+                                    {% for unit in units %}
+                                        {% if item.unit_id==unit.id %}
+                                            {{ unit.name }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>{{ item.units }}</td>
+                                <td>{{ item.dimensions }}</td>
+                                <td>{{ item.hem }}</td>
+                                <td>{{ item.sheets }}</td>
+                                <td>${{ "%.2f"|format(item.unit_price) }}</td>
+                                <td>${{ "%.2f"|format(item.sub_total) }}</td>
+                                <td> 
+                                    ${{ "%.2f"|format(item.excess_material_charge) }} <input type="checkbox" class="excessCheck" id = "{{ item.id }}" name ="e{{ item.id }}" value = "{{ item.excess_material_charge }}">
+                                </td>
+                                <td id="totalDisplay{{ item.id }}">
+                                    <p id = "total{{ item.id }}" hidden> ${{ "%.2f"|format(item.total) }} </p>
+                                    <p id = "totalAndExcess{{ item.id }}"> ${{ "%.2f"|format(item.total + item.excess_material_charge) }} </p>
+                                </td>
+                                <td id="profitDisplay{{ item.id }}" >
+                                    <p id = "profit{{ item.id }}" >${{ "%.2f"|format(item.profit) }} </p>
+                                    <p id = "profitAndExcess{{ item.id }}" hidden>${{ "%.2f"|format(item.profit + item.excess_material_charge) }} </p>
+                                </td>
+                                <td>
+                                    <button type="submit" class="link-button" name="edit" value="1 {{ item.id }}">Edit</button> |
+                                    <button type="submit" class="link-button" name="edit" value="0 {{ item.id }}">Delete</button>
+                                </td>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+        <form id="finish" action="/invoice" method="post">
+            <div class="d-flex justify-content-center">
+                <input type="checkbox" id="taxOption" name="taxOption" {{ 'checked' if client.taxed==1 else ''}}>
+                <input name="tax" value="{{ tax }}" hidden>
+                <label for="taxOption">Sales Tax?</label>
+            </div>
+            <h5 id="taxDisplay" class = "text-center span">
+                Sales Tax: 
+                <span id = "taxAmount">
+                    {% if client.taxed == 1 %}
+                        ${{ "%.2f"|format(tax) }}
+                    {% else %}
+                        No Sales Tax
+                    {% endif %}
+                </span>
+            </h5>
+            <h5 id="totalDisplay" class="text-center span">
+                Client Total: 
+                <span id = "totalAmount">
+                    {% if client.taxed == 1 %}
+                        ${{ "%.2f"|format(totalYtax) }}
+                    {% else %}
+                        ${{ "%.2f"|format(totalNtax) }}
+                    {% endif %}
+                </span>
+            </h5>
+            <h5 class="text-center span">
+                Expected Profit:
+                <span id = "expectedProfitDisplay"> ${{ "%.2f"|format(profit) }}</span>
+            </h5>
+            <div class="d-flex justify-content-center">
+                <div class="d-flex">
+                    <label for="deliveryFee" class="text-end mx-1">Delivery: $</label>
+                    <input id="deliveryFee" class="form-control w-auto" name="deliveryFee" type="number" min="0" step=".01" value=0.00>
+                </div>
+            </div>
+            <div class="mb-3 form-group text-center">
+                <button class="btn btn-primary" type="submit">Generate Invoice</button>
+            </div>
+        </form>
+
+        <form id="item" action="/order" method="post" autocomplete="off">
+            <div class="form-group row">
+                <label for="jobInput" class="col-sm-2 col-form-label text-end">Job Site:&nbsp;</label>
+                <div class="col-sm-10">
+                    <div class="input-wrapper">
+                        <input class="form-control w-auto autocomplete-input" type="text" id="jobInput" name="jobName" value="{{ jobName }}">
+                        <input type="hidden" id="jobId" name="jobId" value="{{ jobId }}">
+                        <div id="autocompleteJobs" class="autocomplete-results form-control" hidden></div>
+                    </div>
+                </div>
+            </div>
+            <div id="newJobDetails" hidden>
+                <div class="form-group row">
+                    <label for="newJobName" class="col-sm-2 col-form-label text-end">Job Name:&nbsp;</label>
+                    <div class="col-sm-10">
+                        <input id="newJobName" class="form-control w-auto" type="text" id="newJobName" name="newJobName" placeholder="New Job Name">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="newJobAddress" class="col-sm-2 col-form-label text-end">Address:&nbsp;</label>
+                    <div class="col-sm-10">
+                        <input id="newJobAddress" class="form-control w-auto" type="text" id="newJobAddress" name="newJobAddress" placeholder="Address">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="itemName" class="col-sm-2 col-form-label text-end">Item Name:&nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="itemName" class="form-control w-auto" autocomplete="off" name="itemName" value="{{ itemName }}" type="text">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="materialInput" class="col-sm-2 col-form-label text-end">Material:&nbsp;</label>
+                <div class="col-sm-10">
+                    <div class="input-wrapper">
+                        <input class="form-control w-auto autocomplete-input" type="text" id="materialInput" name="materialName" value="{{ materialName }}">
+                        <input type="hidden" id="materialId" name="materialId" value="{{ materialId }}">
+                        <div id="autocompleteMaterials" class="autocomplete-results form-control" hidden></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="sheetDimensions" class="col-sm-2 col-form-label text-end">Sheet Dimensions:&nbsp;</label>
+                <div class="col-sm-10">
+                    <select id="sheetDimensions" class="form-control w-auto" name="sheetDimensions">
+                        <option value="48x10">48" x 10'</option>
+                        <option id="customDimension" value="">Custom</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-2 col-form-label text-end"></div>
+                <div class="col-sm-10">
+                    <input id="customDimensionInput" class="form-control w-auto" type="text" placeholder="ii x ff" hidden>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="materialCost" class="col-sm-2 col-form-label text-end">Cost Per Sheet: $&nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="materialCost" class="form-control w-auto" name="materialCost" type="number" min="0" step=".01" value="{{ materialCost }}">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="unit" class="col-sm-2 col-form-label text-end">Unit type: Per &nbsp;</label>
+                <div class="col-sm-10">
+                    <select id="unit" class="form-control w-auto" name="unit">
+                        {% for unit in units %}
+                            <option value="{{ unit.id }}" {% if client.unit_id==unit.id %}selected{% endif %}>{{ unit.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="quantity" class="col-sm-2 col-form-label text-end">Quantity:&nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="quantity" class="form-control w-auto" name="quantity" type="number" min="0" step="1" value="{{ quantity }}">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="hem" class="col-sm-2 col-form-label text-end">Hem:&nbsp;</label>
+                <div class="col-sm-10">
+                    <select class="form-control w-auto" id="hem" name="hem">
+                        <option value="0" {% if hem==0 %}selected{% endif %}>0</option>
+                        <option value="1" {% if hem==1 %}selected{% endif %}>1</option>
+                        <option value="2" {% if hem==2 %}selected{% endif %}>2</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="folds" class="col-sm-2 col-form-label text-end">Number of Folds:&nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="folds" class="form-control w-auto" name="folds" type="number" min="0" step="1" value="{{ folds }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <p>Fold Dimensions (format xx aa/bb):&nbsp;</p>
+                <div id="foldarray">
+                    {% if folds > 0 %}
+                        {% for dimension in d %}
+                            <input id="d{{ loop.index0 }}" type="text" class="dimensionfield" name="d{{ loop.index0 }}" value="{{ dimension }}">
+                        {% endfor %}
+                    {% else %}
+                        <input type="text" id="d0" class=dimensionfield" name="d0" value="">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mb-3">
+                <p>Angles:&nbsp;</p>
+                <div id="anglearray">
+                    {% for angle in a %}
+                        <input type="number" max="180" class="dimensionfield" name="a{{ loop.index0 }}" value="{{ angle }}">
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="mb-3 form-group text-center">
+                <button class="btn btn-primary" type="submit" name="add" value="1">Add Line and Reuse</button>
+            </div>
+
+            <div class="mb-3 form-group text-center">
+                <button class="btn btn-primary" type="submit" name="add" value="0">Add Line </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.7/dist/latest/bootstrap-autocomplete.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('expand').addEventListener('click', function() {
+                var form = document.getElementById('cart');
+                if (form.hasAttribute('hidden')) {
+                    form.removeAttribute('hidden');
+                } else {
+                    form.setAttribute('hidden', '');
+                }
+            });
+            let excessChecks = document.querySelectorAll('input.excessCheck');
+
+            excessChecks.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function(){
+                    
+                    var eId=checkbox.id;
+                    var totalDisplay = document.getElementById('total' + eId);
+                    var totalAndExcessDisplay = document.getElementById('totalAndExcess' + eId);
+                    var profitDisplay = document.getElementById('profit'+ eId)
+                    var profitAndExcessDisplay= document.getElementById('profitAndExcess'+ eId)
+                    var checkboxData = Array.from(excessChecks).map(checkbox => ({
+                        id: checkbox.id,
+                        checked: checkbox.checked
+                    }));
+
+                    if (checkbox.checked) {
+                            totalAndExcessDisplay.removeAttribute("hidden");
+                            totalDisplay.setAttribute("hidden", "");
+                            profitAndExcessDisplay.removeAttribute("hidden");
+                            profitDisplay.setAttribute("hidden", "");
+                    } else {
+                            totalAndExcessDisplay.setAttribute("hidden", "");
+                            totalDisplay.removeAttribute("hidden");
+                            profitAndExcessDisplay.setAttribute("hidden", "");
+                            profitDisplay.removeAttribute("hidden");
+                    }
+
+                    callcalculator(checkboxData);
+                });
+
+            });
+            let taxOption = document.getElementById('taxOption');
+            taxOption.addEventListener('change', function(){
+                let excessChecks = document.querySelectorAll('input.excessCheck');
+                excessChecks.forEach(function(cb){
+                    var checkboxData = Array.from(excessChecks).map(cb => ({
+                        id: cb.id,
+                        checked: cb.checked
+                    }));
+                    callcalculator(checkboxData);
+                })
+            });
+            function callcalculator(checkBoxes) {
+                fetch('/api/calculate_total', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ checkboxes: checkBoxes})         
+                })
+                .then(response => response.json())
+                .then(data=> {
+                    var totalYtax = data.totalYtax;
+                    var totalNtax = data.totalNtax;
+                    var tax = data.tax;
+                    var expectedProfit = data.expectedProfit;
+                    var expectedProfitDisplay = document.getElementById('expectedProfitDisplay');
+                    expectedProfitDisplay.textContent = "$" + expectedProfit.toFixed(2);
+                    var taxOption = document.getElementById('taxOption');
+                    var totalAmount = document.getElementById('totalAmount');
+                    var taxAmount = document.getElementById('taxAmount');
+                    if (taxOption.checked) {
+                        totalAmount.textContent = "$" + totalYtax.toFixed(2);
+                        taxAmount.textContent = "$" + tax.toFixed(2);
+                    } else {
+                        totalAmount.textContent = "$" + totalNtax.toFixed(2);
+                        taxAmount.textContent = "No Sales Tax";    
+                    }
+                    })
+                .catch(error => {
+                    console.error('error with function', error);
+                })
+            }  
+            document.getElementById('finish').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                let excessChecks = document.querySelectorAll('input.excessCheck');
+                let checkStates =[];
+
+                excessChecks.forEach(function(cb){
+                    var excessCheckId = cb.id;
+                    var excessCheckState = cb.checked;
+
+                    checkStates.push({
+                        id: excessCheckId,
+                        checked: excessCheckState
+                    });
+                });
+
+                var pushToFormInput = document.createElement('input');
+                pushToFormInput.setAttribute('hidden', "");
+                pushToFormInput.setAttribute('name', "excessCheckStates");
+                pushToFormInput.setAttribute('value', JSON.stringify(checkStates));
+
+                this.appendChild(pushToFormInput);
+                this.submit();
+
+            });
+
+            document.getElementById('folds').addEventListener('input', function() {
+            // Store the existing fold and angle data
+                var foldData = [];
+                var angleData = [];
+                var foldInputs = document.querySelectorAll('#foldarray input');
+                var angleInputs = document.querySelectorAll('#anglearray input');
+                foldInputs.forEach(function(input) {
+                    foldData.push(input.value);
+                });
+                angleInputs.forEach(function(input) {
+                    angleData.push(input.value);
+                });
+
+            // Clear the fold and angle arrays
+                var foldarray = document.getElementById('foldarray');
+                var anglearray = document.getElementById('anglearray');
+                foldarray.innerHTML = '';
+                anglearray.innerHTML = '';
+
+            // Create new fold inputs with preserved data
+                for (var i = 0; i < +this.value + 1; i++) {
+                    var input = document.createElement('input');
+                    input.classList.add('dimensionfield')
+                    input.name = "d" + i;
+                    input.value = foldData[i] || ''; // Preserve existing data or set to empty string
+                    foldarray.appendChild(input);
+                }
+
+            // Create new angle inputs with preserved data
+                for (var i = 0; i < this.value; i++) {
+                    var input = document.createElement('input');
+                    input.classList.add('dimensionfield')
+                    input.type = "number";
+                    input.min = "0"
+                    input.max = "180"
+                    input.name = "a" + i;
+                    input.value = angleData[i] || ''; // Preserve existing data or set to empty string
+                    anglearray.appendChild(input);
+                }
+            });
+
+            document.getElementById('item').addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                }
+            });
+            document.getElementById('finish').addEventListener('submit', function(event) {
+                var cartJson = '{{ cart | tojson | safe }}';
+                var cart = JSON.parse(cartJson);
+                let cartSize=cart.length;
+                let fee=Number(document.getElementById('deliveryFee').value);
+                if (cartSize===0 && fee===0) {
+                    alert("cart is empty");
+                    event.preventDefault();
+                }
+            });
+            document.getElementById('item').addEventListener('submit', function(event) {
+                let job_id = document.getElementById("jobId").value;
+                if (!job_id || job_id.trim() === "") {
+                    alert('Select a Job site');
+                    event.preventDefault();
+                }
+                let materialId = document.getElementById("materialId").value;
+                if (!materialId) {
+                    alert('Select a material');
+                    event.preventDefault();
+                }
+                let materialCost = document.getElementById("materialCost").value;
+                if (!materialCost || materialCost==="0") {
+                    alert('No material cost entered');
+                    event.preventDefault();
+                }
+                function validateInput(input) {
+                    var regex = /^\d+$|^\d+\.\d+$|^\d+\/\d+$|^\d+[-\s]\d+\/\d+$/;
+                    return regex.test(input);
+                }
+                let folds = parseInt(document.getElementById("folds").value);
+                let foldarray = document.getElementById('foldarray');
+                for (let i= 0; i < folds+1; i++) {
+                    let opt = "d" + i;
+                    let val = document.querySelector(`input[name="${opt}"]`).value;
+                    if (!validateInput(val)) {
+                        let r = i+1;
+                        alert(`Invalid format in dimension ${r}`);
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            });
+            document.getElementById('sheetDimensions').addEventListener('change', function(event) {
+                var sheetDimensions = this.value;
+                var customDimensionInput = document.getElementById('customDimensionInput');
+                if (sheetDimensions === "") {
+                    customDimensionInput.removeAttribute('hidden');
+                } else {
+                    customDimensionInput.setAttribute('hidden', '');
+                }
+            });
+            var customDimensionInput = document.getElementById('customDimensionInput');
+            customDimensionInput.addEventListener('blur', function(event) {
+                var customDimensionValue = customDimensionInput.value.trim();
+                var customDimension = document.getElementById('customDimension');
+                customDimension.value = customDimensionValue;
+            });
+            var materialsJson = '{{ materials | tojson | safe }}';
+            var materials = JSON.parse(materialsJson);
+            var materialNames = materials.map(function(material) {
+                return material.name.toLowerCase();
+            });
+            var materialInput = document.getElementById('materialInput');
+            var materialIdInput = document.getElementById('materialId');
+            var autocompleteMaterials = document.getElementById('autocompleteMaterials');
+
+            function autocompletematerial() {
+                var inputText = materialInput.value.trim().toLowerCase();
+                var matches = materials.filter(function(material) {
+                    return material.name.toLowerCase().includes(inputText);
+                }).slice(0, 12).sort(function(a, b) {
+                    return a.name.localeCompare(b.name);
+                });
+                autocompleteMaterials.innerHTML = '';
+                autocompleteMaterials.removeAttribute('hidden')
+                matches.forEach(function(match) {
+                    var result = document.createElement('div');
+                    result.classList.add('item');
+                    result.textContent = match.name;
+                    result.addEventListener('click', function() {
+                        materialInput.value = match.name;
+                        materialIdInput.value = match.id;
+                        autocompleteMaterials.innerHTML = '';
+                        autocompleteMaterials.setAttribute('hidden', '')
+                    });
+                    autocompleteMaterials.appendChild(result);
+                });
+                if (matches.length === 0) {
+                    materialIdInput.value = null;
+                }
+            }
+            materialInput.addEventListener('focus', autocompletematerial);
+            materialInput.addEventListener('input', autocompletematerial);
+
+            var jobsJson = '{{ jobs | tojson | safe }}';
+            var jobs = JSON.parse(jobsJson);
+            var jobNames = jobs.map(function(job) {
+                return job.name.toLowerCase();
+            });
+            var newJob = jobs.find(function(job) {
+                return job.id === 1;
+            });
+            var jobInput = document.getElementById('jobInput');
+            var jobId = document.getElementById('jobId');
+            var autocompleteJobs = document.getElementById('autocompleteJobs');
+
+            function autocompletejob() {
+                var inputText = jobInput.value.trim().toLowerCase();
+                var matches = jobs.filter(function(job) {
+                    return job.name.toLowerCase().includes(inputText);
+                }).slice(0, 12).sort(function(a, b) {
+                    return a.name.localeCompare(b.name);
+                }).filter(function(job) {
+                    return job.id !== 1;
+                });
+                matches.unshift(newJob);
+                autocompleteJobs.innerHTML = '';
+                autocompleteJobs.removeAttribute('hidden')
+                matches.forEach(function(match) {
+                    var result = document.createElement('div');
+                    result.classList.add('item');
+                    result.textContent = match.name;
+                    result.addEventListener('click', function() {
+                        jobInput.value = match.name;
+                        jobId.value = match.id;
+                        autocompleteJobs.innerHTML = '';
+                        autocompleteJobs.setAttribute('hidden', '')
+                        visibility(jobId.value);
+                    });
+                    autocompleteJobs.appendChild(result);
+
+
+                });
+            }
+            jobInput.addEventListener('focus', autocompletejob);
+            jobInput.addEventListener('input', autocompletejob);
+
+            function visibility(_) {
+                var newJobDetails = document.getElementById('newJobDetails');
+                var id = parseInt(_);
+                if (id === 1) {
+                    newJobDetails.removeAttribute('hidden');
+                } else {
+                    newJobDetails.setAttribute('hidden', '');
+                }
+            }
+        });
+    </script>
+{% endblock %}

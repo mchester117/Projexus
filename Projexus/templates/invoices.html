@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Invoices
+{% endblock %}
+
+{% block main %}
+    <div class="pageheader">
+        <h6 class="red">Click an invoice to expand/collapse</h6>
+    </div>
+    <div class="pagebody d-block justify-content-center">
+        <form id="multiPay" action="/payinvoice" method="post">
+            <input name="site" hidden value="invoices">
+            <h5 class="text-center span">Invoices</h5>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Invoice #</th>
+                        <th scope="col">Client</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Delivery Fee</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Update to Paid</th>
+                    </tr>
+                </thead>
+                {% if resultCount>0 %}
+                    <tbody>
+                        {% for invoice in invoices %}
+                            <tr class="invoice-row">
+                                <th scope="row">{{ invoice.id }}</td>
+                                <td>{{ invoice.client_name }}</td>
+                                <td>{{ invoice.dtg }}</td>
+                                {% if invoice.delivery_fee > 0 %}
+                                    <td>${{ "%.2f"|format(invoice.delivery_fee) }}</td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                                <td>${{ "%.2f"|format(invoice.total) }}</td>
+                                {% if invoice.status_id == 0 %}
+                                    <td>Due:{{ invoice.due }}</td>
+                                    <td><input type="checkbox" name="paid" value="{{ invoice.id }}"></td>
+                                {% else %}
+                                    <td>Paid</td>
+                                    <td></td>
+                                {% endif %}
+
+                            </tr>
+                            <tr class="invoice-details" style="display: none;">
+                                <td colspan="7">
+                                    <table class="table table-dark table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Job</th>
+                                                <th scope="col">Address</th>
+                                                <th scope="col">Material</th>
+                                                <th scope="col">Dimensions</th>
+                                                <th scope="col">Units</th>
+                                                <th scope="col">Unit Price</th>
+                                                <th scope="col">Excess Material</th>
+                                                <th scope="col">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in invoice['items'] %}
+                                                <tr>
+                                                    <td>{{ item.job }}</td>
+                                                    <td>{{ item.address }}</td>
+                                                    <td>{{ item.material }}</td>
+                                                    <td>{{ item.dimensions }}</td>
+                                                    <td>{{ item.units }}</td>
+                                                    <td>${{ "%.2f"|format(item.unit_price) }}</td>
+                                                    {% if item.excess_material_charge > 0 %}
+                                                        <td>${{ "%.2f"|format(item.excess_material_charge) }}</td>
+                                                    {% else %}
+                                                        <td></td>
+                                                    {% endif %}
+                                                    <td>${{ "%.2f"|format(item.total) }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                {% endif %}
+            </table>
+            <div class="mb-3 form-group text-center">
+                <button class="btn btn-primary" type="submit">Mark as Paid</button>
+            </div>
+        </form>
+    </div>
+    <form>
+        {% if resultCount>20 %}
+            <button class="btn btn-primary" id="index" type="submit" name="index" value="{{ currentIndex }}">{{ nextRange }} of {{ resultCount }}</button>
+        {% endif %}
+    </form>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Add event listener to each invoice row to toggle details visibility
+            var invoiceRows = document.querySelectorAll('.invoice-row');
+            invoiceRows.forEach(function(row) {
+                row.addEventListener('click', function(event) {
+                // Check if the click event target is the checkbox
+                    if (!event.target.matches('input[type="checkbox"]')) {
+                        var detailsRow = this.nextElementSibling;
+                        if (detailsRow.classList.contains('invoice-details')) {
+                            detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+{% endblock %}

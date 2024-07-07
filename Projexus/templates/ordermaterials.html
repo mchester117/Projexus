@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Order Materials
+{% endblock %}
+
+{% block main %}
+    <div class="pagebody d-block justify-content-center">
+        <form id="orderAllMaterials" action="/ordermaterials" method="post">
+            <h5 class="text-center span">Required Totals</h5>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col" hidden></th>
+                        <th scope="col">Material Name</th>
+                        <th scope="col">Sheets Required</th>
+                        <th scope="col">Mark as Purchased</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if materialTotals|length >=1 %}
+                        {% for material in materialTotals %}
+                            <tr>
+                                <td hidden>{{ material.id }}</td>
+                                <th scope="row">{{ material.name }}</th>
+                                <td>{{ material.needed }}</td>
+                                <td><input type="checkbox" name="ordered" value="{{ material.id }}"></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+            <div class="mb-3 form-group text-center">
+                <button class="btn btn-primary" type="submit" name="buyAll">Mark as Purchased</button>
+            </div>
+        </form>
+        <div class="mb-3 form-group text-center">
+            <button id="expand" class="btn btn-primary">Show/Hide Individual Items</button>
+        </div>
+        <div id="items" hidden>
+            <form id="orderSomeMaterials" action="/ordermaterials" method="post">
+                <h5 class="text-center span">Individual Line Items</h5>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col" hidden></th>
+                            <th scope="col">Invoice ID</th>
+                            <th scope="col">Item Name</th>
+                            <th scope="col" hidden></th>
+                            <th scope="col">Material</th>
+                            <th scope="col">Sheets Required</th>
+                            <th scope="col">Mark as Purchased</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if itemList|length >=1 %}
+                            {% for item in itemList %}
+                                <tr>
+                                    <td hidden>{{ item.id }}</td>
+                                    <th scope="row">{{ item.invoice_id }}</th>
+                                    <td>{{ item.name }}</td>
+                                    <td hidden>{{ item.materialId }}</td>
+                                    <td>{{ item.materialName }}</td>
+                                    <td>{{ item.needed }}</td>
+                                    <td><input type="checkbox" name="ordered" value="{{ item.id }}"></td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+                <div class="mb-3 form-group text-center">
+                    <button class="btn btn-primary" type="submit" name="buySome">Mark as Purchased</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.7/dist/latest/bootstrap-autocomplete.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('expand').addEventListener('click', function() {
+                var form = document.getElementById('items');
+                if (form.hasAttribute('hidden')) {
+                    form.removeAttribute('hidden');
+                } else {
+                    form.setAttribute('hidden', '');
+                }
+            });
+        });
+    </script>
+{% endblock %}

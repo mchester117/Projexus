@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    New Client
+{% endblock %}
+
+{% block main %}
+    <div class="text-left">
+        <a href="/clients" class="btn btn-primary" role="button">Cancel</a>
+    </div>
+    <h3 class="text-left">New Client</h3>
+
+    <div class="pagebody">
+        <form id="form" action="/newclient" method="post" autocomplete="off">
+            <div class="form-group row">
+                <label for="name" class="col-sm-2 col-form-label text-end">Name: &nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="name" class="form-control w-auto" autocomplete="off" name="name" placeholder="Company Name" type="text">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="address" class="col-sm-2 col-form-label text-end">Billing Address: &nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="address" class="form-control w-auto" name="address" placeholder="ex. 123 Fake St Nowhere, TX 12345" type="text">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="phone" class="col-sm-2 col-form-label text-end">Phone Number: &nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="phone" class="form-control w-auto" name="phone" placeholder="ex. 123 456 7890" type="text">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="unit_id" class="col-sm-2 col-form-label text-end">Unit Type: Per &nbsp;</label>
+                <div class="col-sm-10">
+                    <select id="unit_id" class="form-control w-auto" name="unit_id">
+                        {% for unit in units %}
+                            <option value="{{ unit.id }}">{{ unit.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="taxOption" class="col-sm-2 col-form-label text-end">Tax Exempt</label>
+                <div class="col-sm-10">
+                    <input type="checkbox" id="taxOption" name="taxOption" {{ 'checked' if client.taxed==0 else ''}}>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="mm" class="col-sm-2 col-form-label text-end">Material Markup % &nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="mm" class="form-control w-auto" name="mm" value="0" type="number" min="0" step="1">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="am" class="col-sm-2 col-form-label text-end">Additonal Markup % &nbsp;</label>
+                <div class="col-sm-10">
+                    <input id="am" class="form-control w-auto" name="am" value="0" type="number" min="0" step="1">
+                </div>
+            </div>
+            <input hidden name="option" value="{{ option }}">
+            <div class="text-left">
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        document.getElementById('form').addEventListener('submit', function(event) {
+            console.log("start");
+            let name=document.getElementById('name').value;
+            if (!name || name=="") {
+                alert("Please enter a name")
+                event.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

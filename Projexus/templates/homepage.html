@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block main %}
+    {% if level == 0 %}
+        <div class="pageheader justify-content-center">
+            <div class="headerbuttons">
+                <a href="#" class="btn btn-primary" role="button" hidden>! Assign Jobs only visible when needed</a>
+                <a href="#" class="btn btn-primary" role="button" hidden>! Purchase materials only visible when needed</a>
+            </div>
+        </div>
+        <table class="mx-auto table">
+            <thead>
+                <tr>
+                    <th colspan="6">Quarter Snapshot</th>
+                </tr>
+                <tr>
+                    <th scope="col">Month</th>
+                    <th scope="col">A/R</th>
+                    <th scope="col">V/E</th>
+                    <th scope="col">Labor</th>
+                    <th scope="col">Monthly Fixed Expense</th>
+                    <th scope="col">Net</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for statement in statements %}
+                    <tr>
+                        <th scope="row">{{ statement.month }}</td>
+                        <td class='moneyIn'>${{ "%.2f"|format(statement.ar) }}</td>
+                        <td class='moneyOut'>${{ "%.2f"|format(statement.ve) }}</td>
+                        <td class='moneyOut'>{{statement.labor }}</td>
+                        <td class='moneyOut'>{{ statement.fe }}</td>
+                        <td class='bottomLine'>${{ "%.2f"|format(statement.net) }}</td>
+                    </tr>
+                    </tb>
+                {% endfor %}
+            </table>
+    {% else %}
+        <div class="pageheader">
+            <div class="metadata">
+                <h5>Welcome {{ employee.name }}</h5>
+            </div>
+        </div>
+        <div class="pagebody">
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="6">Work Items</th>
+                    </tr>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Material</th>
+                        <th>Dimensions</th>
+                        <th>Angles</th>
+                        <th>Strips to Make</th>
+                        <th>Sheets Required</th>
+                        <th>Hem</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if workload|length >=1 %}
+                        {% for item in workload %}
+                            <tr>
+                                <td class="hidden">{{ item.id }}</td>
+                                <td>{{ item.invoice_id }}</td>
+                                <td>{{ item.materialName }}</td>
+                                <td>{{ item.dimensions }}</td>
+                                <td>{{ item.angles }}</td>
+                                <td>{{ item.strips }}</td>
+                                <td>{{ item.sheets }}</td>
+                                <td>{{ item.hem }}</td>
+                                <td>{{ item.status }}</td>
+                                <td><input type="checkbox" name="ordered" value="{{ item.id }}"></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}

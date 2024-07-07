@@ -1,0 +1,57 @@
+Layout.html:
+    Upon completion of the project, delete the validator (Currently in the footer, 70-86)
+
+Below the status of the website, please let me know what of the options you think would be worth adding:
+
+! - Not Complete
+* - Optional addition
+/ - Complete
+
+Landing:
+    / Ability to register
+    / ability to login
+homepage:
+    * What do you want on the homepage?
+
+Select Customer:
+    / Add new customer
+    / alphabetically sorted list of customers to select
+
+Customer page:
+    / ability to see unpaid invoices
+        / ability to update status to paid
+    ! ability to see purchase history
+    / ability to update all attributes
+    / Display current outstanding balance
+
+Order Page:
+    / ability to add items to customer cart
+    / ability to generate an invoice on all items currently in cart
+    / displays all items in current customers cart
+    / ability to delete or edit items in cart
+    / ability to preload previous values to next line item
+
+* Finance page: A list of all invoices and finance details
+    * Display any of the below on any timeline (Annual, Month, Week, Day) :
+        Expected Gross Income
+        Expected Gross Profit
+        Total $ Outstanding
+        Total $ Received
+        Total $ charged in labor
+        Total $ Material Cost
+        Total $ charged in material resale
+        Total $ labor cost to company
+    * Display a table of invoices with any of the following data sorted on any column:
+        * Customer Name, date ordered, Amount Charged to Customer, Status (Paid or Outstanding)
+            * ability to update invoice status to paid or outstanding
+
+* Analysis page:
+    * Ability to see how many sheets of a particular metal have been ordered, when, by whom, history of price
+    * Any other analysis you might need
+
+Materials page:
+    /ability to add new material
+    /ability to select a material to edit from alphabetical list of materials
+
+
+

@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Materials
+{% endblock %}
+
+{% block main %}
+    <div class="pageheader justify-content-center">
+        <div class="headerbuttons">
+            <a href="/newmaterial" class="btn btn-primary" role="button">+ New Material</a>
+        </div>
+    </div>
+    <h5 class="text-center span">Select a material to work with by double-clicking</h5>
+    <form id="form" action="/materials" method="post">
+        <input type="hidden" id="hiddenInput" name="materialId" value="">
+    </form>
+    <div class="pagebody">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col" hidden></th>
+                    <th scope="col">Material Name</th>
+                    <th scope="col">Charge</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in materials %}
+                <tr>
+                    <td hidden>{{ material.id }}</td>
+                    <th scope="row">{{ material.name }}</td>
+                    <td>${{ "%.2f"|format(material.charge) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        $('table tbody tr').on('dblclick', function() {
+            var chosen = $(this).find('td:first-child').text();
+            $('#hiddenInput').val(chosen);
+            $('#form').submit();
+        });
+    </script>
+
+{% endblock %}

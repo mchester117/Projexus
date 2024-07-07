@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ material[0].name }}
+{% endblock %}
+
+{% block main %}
+    <h3 class="text-left">Editing: {{ material[0].name }}</h3>
+    <div class="pagebody">
+        <form id="form" action="/material" method="post">
+            <input name="id" type="hidden" value={{ material[0].id }}>
+            <div class="form-group row">
+                <label for="name" class="col-sm-2 col-form-label text-end">Name:</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="name" name="name" type="text" value="{{ material[0].name }}">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="gauge" class="col-sm-2 col-form-label text-end">Gauge:</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="gauge" name="gauge" type="number" value="{{ material[0].gauge }}">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="charge" class="col-sm-2 col-form-label text-end">Charge: $</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="charge" name="charge" type="number" value="{{ material[0].charge }}" step="0.01">
+                </div>
+            </div>
+            <div class="text-left">
+                <button class="btn btn-primary" type="submit">Submit Changes</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,109 @@
+/* Navbar */
+#navnlogo {
+    display: flex;
+}
+
+#navnlogo>img {
+    height: 100px;
+    width: auto;
+    border: 2px solid #c6dc55;
+}
+
+#navbar {
+    flex-grow: 1;
+    height: 50%;
+}
+
+/* End Navbar */
+
+#main {
+    margin-left: 100px;
+    margin-right: 100px;
+}
+
+/* Page Headers */
+.pageheader {
+    display: flex;
+}
+
+.pageheader>* {
+    padding: 3px 5px;
+}
+
+.headerbuttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.headerbuttons>* {
+    margin: 3px 3px;
+}
+
+.metadata {
+    display: block;
+    text-align: left;
+
+}
+
+.span {
+    flex-basis: 100%;
+}
+
+.text-left {
+    margin-left: 100px;
+}
+
+/*End Page Headers */
+/*Form Controls */
+.autocomplete-results {
+    border: 1px solid black;
+    cursor: pointer;
+}
+
+.input-wrapper {
+    display: inline-block;
+}
+
+.text-end {
+    white-space: nowrap;
+}
+
+/*End Form Controls */
+/*Font Colors */
+.red {
+    color: red;
+}
+
+/*End Font Colors */
+/*Tables */
+.link-button {
+    background: none;
+    border: none;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: inherit;
+}
+
+th {
+    text-align: center;
+}
+
+td {
+    text-align: center;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+/*End Tables */
+
+/*To delete upon completion */
+a.disabled {
+    pointer-events: none;
+    color: gray;
+}
+
+/*End To delete upon completion */

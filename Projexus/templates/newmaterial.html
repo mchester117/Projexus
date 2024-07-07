@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    New Material
+{% endblock %}
+
+{% block main %}
+    <div class="text-left">
+        <a href="/materials" class="btn btn-primary" role="button">Cancel</a>
+    </div>
+    <h3 class="text-left">New Material</h3>
+
+    <div class="pagebody">
+        <form id="form" action="/newmaterial" method="post">
+            <div class="form-group row">
+                <label for="name" class="col-sm-2 col-form-label text-end">Name:&nbsp;</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="name" name="name" type="text" placeholder="ex. Galvanized 18ga">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="gauge" class="col-sm-2 col-form-label text-end">Gauge:&nbsp;</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="gauge" name="gauge" type="number">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="charge" class="col-sm-2 col-form-label text-end">Charge:&nbsp;$</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="charge" name="charge" type="number" step="0.01">
+                </div>
+            </div>
+            <div class="text-left">
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ client.name }}
+{% endblock %}
+
+{% block main %}
+    <div class="pageheader">
+        <div class="metadata">
+            <h5>Client:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ client.name }}</h5>
+            <h5>Address: {{ client.billing_address }}</h2>
+            <h5>Phone:&nbsp;&nbsp;&nbsp;&nbsp;{{ client.phone_number }}</h5>
+            {% if invoices %}
+                <h5>Outstanding Balance:&nbsp<span class="red">${{ "%.2f"|format(client.balance) }}</span></h5>
+            {% endif %}
+        </div>
+        <div class="headerbuttons px-1">
+            <a href="/order?source=client" class="btn btn-primary">Place an Order</a>
+            <button id="editor" class="btn btn-primary">Edit Attributes</button>
+        </div>
+    </div>
+    <div class="pagebody">
+        <form id="editclient" action="/client" method="post" hidden>
+            <input name="id" type="hidden" value="{{ client.id }}">
+            <div class="form-group row">
+                <label for="name" class="col-sm-2 col-form-label text-end">Name:</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="name" name="name" type="text" value="{{ client.name }}">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="billingAddress" class="col-sm-2 col-form-label text-end">Billing Address:</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="billingAddress" name="billingAddress" type="text" value="{{ client.billing_address }}">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="phoneNumber" class="col-sm-2 col-form-label text-end">Phone Number</label>
+                <div class="col-sm-10">
+                    <input class="form-control w-auto" id="phoneNumber" name="phoneNumber" type="text" value="{{ client.phone_number }}">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="unitId" class="col-sm-2 col-form-label text-end">Unit type: Per &nbsp;</label>
+                <div class="col-sm-10">
+                    <select class="form-control w-auto" id="unitId" name="unitId">
+                        {% for unit in units %}
+                            <option value="{{ unit.id }}" {% if client.unit_id==unit.id %}selected{% endif %}>{{ unit.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="taxOption" class="col-sm-2 col-form-label text-end">Tax Exempt</label>
+                <div class="col-sm-10">
+                    <input type="checkbox" id="taxOption" name="taxOption" {{ 'checked' if client.taxed==0 else ''}}>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="materialMarkup" class="col-sm-2 col-form-label text-end">Material Markup %:</label>
+                <div class="col-sm-10">
+                    <input id="materialMarkup" name="materialMarkup" type="number" value="{{ client.material_markup }}" min="0" step="1">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="additionalMarkup" class="col-sm-2 col-form-label text-end">Additional Markup %:</label>
+                <div class="col-sm-10">
+                    <input id="additionalMarkup" name="additionalMarkup" type="number" value="{{ client.additional_markup }}" min="0" step="1">
+                </div>
+            </div>
+            <button class="btn btn-primary" type="submit">Submit Changes</button>
+        </form>
+        <form id="multiPay" action="/payinvoice" method="post">
+            <input name="site" hidden value="client">
+            <h5 class="text-center span">Invoices</h5>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Invoice #</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Delivery Fee</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Update to Paid</th>
+                    </tr>
+                </thead>
+                {% if resultCount>0 %}
+                    <tbody>
+                        {% for invoice in invoices %}
+                            <tr class="invoice-row">
+                                <th scope="row">{{ invoice.id }}</td>
+                                <td>{{ invoice.dtg }}</td>
+                                {% if invoice.delivery_fee > 0 %}
+                                    <td>${{ "%.2f"|format(invoice.delivery_fee) }}</td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                                <td>${{ "%.2f"|format(invoice.total) }}</td>
+                                {% if invoice.status_id == 0 %}
+                                    <td>Due:{{ invoice.due }}</td>
+                                    <td><input type="checkbox" name="paid" value="{{ invoice.id }}"></td>
+                                {% else %}
+                                    <td>Paid</td>
+                                    <td></td>
+                                {% endif %}
+
+                            </tr>
+                            <tr class="invoice-details" style="display: none;">
+                                <td colspan="6">
+                                    <table class="table table-dark table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Job</th>
+                                                <th scope="col">Address</th>
+                                                <th scope="col">Material</th>
+                                                <th scope="col">Dimensions</th>
+                                                <th scope="col">Units</th>
+                                                <th scope="col">Unit Price</th>
+                                                <th scope="col">Excess Material</th>
+                                                <th scope="col">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in invoice['items'] %}
+                                                <tr>
+                                                    <td>{{ item.job }}</td>
+                                                    <td>{{ item.address }}</td>
+                                                    <td>{{ item.material }}</td>
+                                                    <td>{{ item.dimensions }}</td>
+                                                    <td>{{ item.units }}</td>
+                                                    <td>${{ "%.2f"|format(item.unit_price) }}</td>
+                                                    {% if item.excess_material_charge > 0 %}
+                                                        <td>${{ "%.2f"|format(item.excess_material_charge) }}</td>
+                                                    {% else %}
+                                                        <td></td>
+                                                    {% endif %}
+                                                    <td>${{ "%.2f"|format(item.total) }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                {% else %}
+                    <thead>
+                        <tr>
+                            <th class="text-center">No Outstanding Invoices</th>
+                        </tr>
+                    </thead>
+                {% endif %}
+            </table>
+            <div class="mb-3 form-group text-center">
+                <button class="btn btn-primary" type="submit">Mark as Paid</button>
+            </div>
+        </form>
+
+
+        </table>
+
+    </div>
+    <script>
+        document.getElementById('editor').addEventListener('click', function() {
+            var form = document.getElementById('editclient');
+            if (form.hasAttribute('hidden')) {
+                form.removeAttribute('hidden');
+            } else {
+                form.setAttribute('hidden', '');
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+        // Add event listener to each invoice row to toggle details visibility
+            var invoiceRows = document.querySelectorAll('.invoice-row');
+            invoiceRows.forEach(function(row) {
+                row.addEventListener('click', function(event) {
+                // Check if the click event target is the checkbox
+                    if (!event.target.matches('input[type="checkbox"]')) {
+                        var detailsRow = this.nextElementSibling;
+                        if (detailsRow.classList.contains('invoice-details')) {
+                            detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
